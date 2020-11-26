@@ -4,10 +4,11 @@
 #include <TChain.h>
 #include <TDirectory.h>
 
-void dndeta(const char* direct, int Npart_min, int Npart_max);
-
 void dndeta(const char* direct, int Npart_min, int Npart_max)
 {
+  cout << endl << endl << "Calculating dN/deta..." << endl;
+  cout << "Processing events from directory: " << direct << endl;
+
   // Borders of eta
   const double etaMin = -5.0;
   const double etaMax =  5.0;
@@ -24,7 +25,6 @@ void dndeta(const char* direct, int Npart_min, int Npart_max)
   while ((file=(TSystemFile*)next()))
   {
     TString fname = file->GetName();
-    cout << "[" << fname.Data() << "]";
     if(strstr(fname,".root"))
       tree->Add(dirname+fname);
   }
@@ -37,6 +37,7 @@ void dndeta(const char* direct, int Npart_min, int Npart_max)
   Int_t npart, Nparticipants;
 
   int nevents = tree->GetEntries();
+  cout << "Total number of events in directory: " << nevents << endl;
   int centrality_events = 0;
   tree->SetBranchAddress("px",&px[0]);
   tree->SetBranchAddress("py",&py[0]);
@@ -48,10 +49,10 @@ void dndeta(const char* direct, int Npart_min, int Npart_max)
   double dN[nBins]={0.0};
   for(int iev=0; iev<nevents; iev++)
   {
-    if (iev%((int)nevents/100) == 0) cout << (int)100*iev/nevents << "%" << endl;
+    if ((iev)%((int)nevents/20) == 0) cout << (int)100*iev/nevents << "%" << endl;
     tree->GetEntry(iev);
     if (Nparticipants > Npart_min && Nparticipants < Npart_max)
-    {  
+    {
       centrality_events++;
       for(int i=0; i<npart; i++)
       {
@@ -65,7 +66,7 @@ void dndeta(const char* direct, int Npart_min, int Npart_max)
     }
   }
 
-  cout << centrality_events << endl;
+  cout << "Number of events in chosen centrality interval: " << centrality_events << endl;
 
   // Write results into the text file (append)
   ofstream fout;
@@ -78,5 +79,7 @@ void dndeta(const char* direct, int Npart_min, int Npart_max)
   }
   fout << endl;
   fout.close();
+
+  cout << "Results have been written to 'dndeta.dat'" << endl;
 
 }
