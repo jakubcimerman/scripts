@@ -54,6 +54,7 @@ void vn_EP_rapidity(const char* direct, int Npart_min, int Npart_max, double ord
 
   int nevents = tree->GetEntries();
   cout << "Total number of events in directory: " << nevents << endl;
+  int centrality_events = 0;
   tree->SetBranchAddress("px",&px[0]);
   tree->SetBranchAddress("py",&py[0]);
   tree->SetBranchAddress("pz",&pz[0]);
@@ -67,7 +68,7 @@ void vn_EP_rapidity(const char* direct, int Npart_min, int Npart_max, double ord
   double vn_obs[nBins]={0.0}, Rn = 0.0;
   double sd1[nBins]={0.0}, vnerr[nBins]={0.0};
 
-  for(int iev=0; iev<tree->GetEntries(); iev+=eventStep)
+  for(int iev=0; iev<tree->GetEntries(); iev++)
   {
     if ((iev)%((int)nevents/20) == 0) cout << (int)100*iev/nevents << "%" << endl;
     double Qx = 0.0, Qy = 0.0;
@@ -80,12 +81,12 @@ void vn_EP_rapidity(const char* direct, int Npart_min, int Npart_max, double ord
         const float pabs = sqrt(px[i]*px[i]+py[i]*py[i]+pz[i]*pz[i]);
         const float pt = sqrt(px[i]*px[i]+py[i]*py[i]);
         const float phi = atan2(py[i],px[i]);
-        const float eta = 0.5*log((pabs+pz[i])/(pabs-pz[i]))
+        const float eta = 0.5*log((pabs+pz[i])/(pabs-pz[i]));
 
         if(fabs(eta)<etaCut && pt>ptMinCut && pt<ptMaxCut)
         {
-          Qx += pt*cos(order*phi);  
-          Qy += pt*sin(order*phi); 
+          Qx += pt*cos(order*phi);
+          Qy += pt*sin(order*phi);
         }
       }
 
@@ -133,7 +134,7 @@ void vn_EP_rapidity(const char* direct, int Npart_min, int Npart_max, double ord
 
       const double psi2A = atan2(QyA,QxA)/order;
       const double psi2B = atan2(QyB,QxB)/order;
-      
+
       for(int i=0; i<nBins; i++)
       {
         if(_nvn[i]>0) _vn_obs[i] /= _nvn[i];
@@ -185,7 +186,7 @@ void vn_EP_rapidity(const char* direct, int Npart_min, int Npart_max, double ord
     vn[irap] = vn_obs[irap]/Rn;
     vnerr[irap] = vnerr[irap] / Rn / sqrt(nevents);
     rapBin[irap] = yMin + (irap+0.5)*dy;
-    cout << setw(14) << rapBin[irap] << setw(14) << vn[irap] << endl;
+    cout << rapBin[irap] << "\t" << vn[irap] << "\t" << vnerr[irap] << endl;
     fout << rapBin[irap] << "\t" << vn[irap] << "\t" << vnerr[irap] << endl;
   }
   fout << endl;
