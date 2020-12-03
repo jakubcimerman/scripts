@@ -4,14 +4,6 @@
 #include <TTree.h>
 #include <TChain.h>
 #include <TDirectory.h>
-#include <TStyle.h>
-#include <TCanvas.h>
-#include <TH1.h>
-#include <TH2.h>
-#include <TGraph.h>
-#include <TGraphErrors.h>
-#include <TLegend.h>
-#include <TMath.h>
 
 using namespace std;
 
@@ -24,7 +16,7 @@ void vn_EP_rapidity_IH(const char* direct, int Npart_min, int Npart_max, double 
   // Cuts
   const double etaCut = 1.0;
   const double ptMinCut = 0.2;
-  const double ptMaxCut = 2.0;
+  const double ptMaxCut = 1.6;
   const double yMin = -1.0;
   const double yMax =  1.0;
   const int nBins = 10;
