@@ -46,7 +46,7 @@ void vn_RP_rapidity_IH(const char* direct, int Npart_min, int Npart_max, double 
 
   int nevents = tree->GetEntries();
   cout << "Total number of events in directory: " << nevents << endl;
-  int centrality_events = 0;
+  int centrality_events[nBins] = {0};
   tree->SetBranchAddress("px",&px[0]);
   tree->SetBranchAddress("py",&py[0]);
   tree->SetBranchAddress("pz",&pz[0]);
@@ -68,7 +68,6 @@ void vn_RP_rapidity_IH(const char* direct, int Npart_min, int Npart_max, double 
     tree->GetEntry(iev);
     if (Nparticipants > Npart_min && Nparticipants < Npart_max)
     {
-      centrality_events++;
       for(int i=0; i<npart; i++)
       {
         const float pabs = sqrt(px[i]*px[i]+py[i]*py[i]+pz[i]*pz[i]);
@@ -87,20 +86,23 @@ void vn_RP_rapidity_IH(const char* direct, int Npart_min, int Npart_max, double 
 
       for(int i=0; i<nBins; i++)
       {
-        Qx[i] /= Np[i];
-        vn[i] += Qx[i];
-        sd1[i] += Qx[i] * Qx[i];
+        if (Np[i] > 0)
+        {
+          centrality_events[i]++;
+          Qx[i] /= Np[i];
+          vn[i] += Qx[i];
+          sd1[i] += Qx[i] * Qx[i];
+        }
       }
     }
   }
 
-  nevents = centrality_events;
-  cout << "Number of events in chosen centrality interval: " << centrality_events << endl;
+  cout << "Number of events in chosen centrality interval: " << centrality_events[(int)(nBins/2)] << endl;
 
   for(int i=0; i<nBins; i++)
   {
-    vn[i] /= nevents;
-    vnerr[i] = sqrt(sd1[i]/nevents - vn_obs[i]*vn_obs[i]);
+    vn[i] /= centrality_events[i];
+    vnerr[i] = sqrt(sd1[i]/centrality_events[i] - vn[i]*vn[i]);
   }
 
   double *rapBin = new double [nBins];
@@ -111,7 +113,7 @@ void vn_RP_rapidity_IH(const char* direct, int Npart_min, int Npart_max, double 
   fout << direct << "\t" << (int)order << "\t" << pid << endl;
   for(int irap = 0; irap < nBins; irap++)
   {
-    vnerr[irap] = vnerr[irap] / sqrt(nevents);
+    vnerr[irap] = vnerr[irap] / sqrt(centrality_events[irap]);
     rapBin[irap] = yMin + (irap+0.5)*dy;
     cout << rapBin[irap] << "\t" << vn[irap] << "\t" << vnerr[irap] << endl;
     fout << rapBin[irap] << "\t" << vn[irap] << "\t" << vnerr[irap] << endl;
