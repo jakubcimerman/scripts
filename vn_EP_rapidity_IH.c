@@ -75,7 +75,7 @@ void vn_EP_rapidity_IH(const char* direct, int Npart_min, int Npart_max, double 
         const float phi = atan2(py[i],px[i]);
         const float eta = 0.5*log((pabs+pz[i])/(pabs-pz[i]));
 
-        if(fabs(eta)<etaCut && pt>ptMinCut && pt<ptMaxCut && id[i]==pid)
+        if(fabs(eta)<etaCut && pt>ptMinCut && pt<ptMaxCut)
         {
           Qx += pt*cos(order*phi);
           Qy += pt*sin(order*phi);
@@ -108,7 +108,7 @@ void vn_EP_rapidity_IH(const char* direct, int Npart_min, int Npart_max, double 
             _nvn[yBin]++;
           }
         }
-        if(fabs(0.5*log((pabs+pz[i])/(pabs-pz[i])))<etaCut && pt>ptMinCut && pt<ptMaxCut && id[i]==pid)
+        if(fabs(0.5*log((pabs+pz[i])/(pabs-pz[i])))<etaCut && pt>ptMinCut && pt<ptMaxCut)
         {
           if(i%2==0)
           { // subevent A
