@@ -11,11 +11,8 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
   cout << "Processing events from directory: " << direct << endl;
 
   // Cuts
-  const double etaCut = 7.0;
   const double ptMinCut = 0.4;
   const double ptMaxCut = 4.0;
-  const double etaMin = -5.1;
-  const double etaMax =  5.1;
   const int nBins = 5;
   const double deta = (etaTestMax-etaTestMin)/nBins;
 
@@ -79,7 +76,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
           const float pt = sqrt(px[i]*px[i]+py[i]*py[i]);
           const float phi = atan2(py[i],px[i]);
           double eta = 0.5*log((pabs+pz[i])/(pabs-pz[i]));
-          if(fabs(eta) < etaCut && pt > ptMinCut && pt < ptMaxCut && ele[i] != 0)
+          if(pt > ptMinCut && pt < ptMaxCut && ele[i] != 0)
           {
             if(eta < etaRefMax && eta > etaRefMin)
             {
