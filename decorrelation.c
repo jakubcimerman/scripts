@@ -69,10 +69,10 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     for(int k = 0; k < eventStep; k++)
     {
       tree->GetEntry(iev+k);
+      if ((iev+k)%((int)nevents/20) == 0) cout << (int)100*(iev+k+1)/nevents << "%" << endl;
       // centrality cut
       if (Nparticipants > Npart_min && Nparticipants < Npart_max)
       {
-        centrality_events++;
         for(int i=0; i<npart; i++)
         {
           const float pabs = sqrt(px[i]*px[i]+py[i]*py[i]+pz[i]*pz[i]);
@@ -113,6 +113,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     }
     if (NRef > 0)
     {
+      centrality_events++;
       QxRef = (double)QxRef/NRef;
       QyRef = (double)QyRef/NRef;
     }
@@ -148,8 +149,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     }
   }
 
-  centrality_events /= eventStep;
-  cout << "Number of events in chosen centrality interval: " << centrality_events << endl;
+  cout << "Number of oversampled events in chosen centrality interval: " << centrality_events << endl;
 
   for(int i=0; i<nBins; i++)
   {
@@ -189,6 +189,6 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
   fout << endl;
   fout.close();
 
-  cout << "Results have been written to 'ddecorrelation.dat'" << endl;
+  cout << "Results have been written to 'decorrelation.dat'" << endl;
 }
 
