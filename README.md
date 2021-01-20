@@ -78,3 +78,33 @@ or in batch mode
 ```bash
 root -q -b 'vn_RP_rapidity_IH.c("directory",Npart_min,Npart_max,order,pid)'
 ```
+
+## r<sub>n</sub> (η)
+###### `decorrelation.c`
+This script reads ten parameters:
+- `directory` - directory of your root files
+- `order` - order of the decorrelation coefficient you want to calculate
+- `eventStep` - this calcultion uses oversampling of final events by creating so-called superevents. This parameter sets the number of merged events
+- `etaRefMin` & `etaRefMax` - the reference region of pseudorapidity
+- `etaTestMin` & `etaTestMax` - the test region of pseudorapidity
+- `Npart_min` - lower limit of your cut on number of participants
+- `Npart_max` - upper limit of your cut on number of participants
+- `isSym` - set 1 for symmetric collision and 0 for asymmetric collision
+
+The script can be run either by
+```bash
+root 'decorrelation.c("directory",order,eventStep,etaRefMin,etaRefMax,etaTestMin,etaTestMax,Npart_min,Npart_max,isSym)'
+```
+or in batch mode
+```bash
+root -q -b 'decorrelation.c("directory",order,eventStep,etaRefMin,etaRefMax,etaTestMin,etaTestMax,Npart_min,Npart_max,isSym)'
+```
+
+Other parameters can be changed in the beginning of the script and are set to:
+- Transverse momentum cut = (0.4; 4.0)
+- Number of bins = 5
+
+Output file contains the path to data, order and three columns:
+
+| η | r<sub>n</sub> | error |
+|---|---|---|
