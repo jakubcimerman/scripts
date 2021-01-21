@@ -104,7 +104,7 @@ void vn_EP_pseudorapidity(char* direct, int Npart_min, int Npart_max, double ord
             _nvn[etaBin]++;
           }
         }
-        if(fabs(0.5*log((pabs+pz[i])/(pabs-pz[i])))<etaCut && pt>ptMinCut && pt<ptMaxCut)
+        if(fabs(0.5*log((pabs+pz[i])/(pabs-pz[i])))<etaMax && pt>ptMinCut && pt<ptMaxCut)
         {
           if(i%2==0)
           { // subevent A
@@ -145,7 +145,6 @@ void vn_EP_pseudorapidity(char* direct, int Npart_min, int Npart_max, double ord
   }
 
   Etotaver /= nevents;
-  cout << "vn_obs = " << vn_obs << endl;
 
   Rn = sqrt(Rn/nevents);
   cout << "R_n^sub = " << Rn << endl;
