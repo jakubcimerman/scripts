@@ -74,7 +74,7 @@ or in batch mode
 root -q -b 'vn_EP_pseudorapidity.c("directory",Npart_min,Npart_max,order)'
 ```
 
-Output file contains the path to data and two columns:
+Output file contains the path to data and three columns:
 
 | η | v<sub>n</sub> | error |
 |---|---|---|
