@@ -5,7 +5,7 @@
 #include <TChain.h>
 #include <TDirectory.h>
 
-void decorrelation(char* direct, double order, int eventStep, double etaRefMin, double etaRefMax, double etaTestMin, double etaTestMax, int Npart_min, int Npart_max, int isSym)
+void decorrelation(char* direct, double order, int eventStep, double etaRefMin, double etaRefMax, double etaTestMin, double etaTestMax, int Npart_min, int Npart_max, int isSym, char* option)
 {
   cout << endl << endl << "Calculating decorrelation..." << endl;
   cout << "Processing events from directory: " << direct << endl;
@@ -61,6 +61,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     double QxRef_ = 0.0, QyRef_ = 0.0;
     double Qx[nBins] = {0.0}, Qy[nBins] = {0.0};
     double Qx_[nBins] = {0.0}, Qy_[nBins] = {0.0};
+    double v[nBins], v_[nBins], vRef, vRef_, psi[nBins], psi_[nBins], psiRef, psiRef_;
     int NRef = 0, NRef_ = 0, NTest[nBins] = {0}, NTest_[nBins] = {0};
 
     for(int k = 0; k < eventStep; k++)
@@ -113,11 +114,15 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
       centrality_events++;
       QxRef = (double)QxRef/NRef;
       QyRef = (double)QyRef/NRef;
+      vRef = sqrt(QxRef*QxRef+QyRef*QyRef);
+      psiRef = atan2(QyRef, QxRef) / order;
     }
     if (NRef_ > 0)
     {
       QxRef_ = (double)QxRef_/NRef_;
       QyRef_ = (double)QyRef_/NRef_;
+      vRef_ = sqrt(QxRef_*QxRef_+QyRef_*QyRef_);
+      psiRef_ = atan2(QyRef_, QxRef_) / order;
     }
     for (int i = 0; i < nBins; i++)
     {
@@ -125,24 +130,63 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
       {
         Qx[i] = Qx[i]/NTest[i];
         Qy[i] = Qy[i]/NTest[i];
+        v[i] = sqrt(Qx[i]*Qx[i]+Qy[i]*Qy[i]);
+        psi[i] = atan2(Qy[i], Qx[i]) / order;
       }
       if (NTest_[i] > 0)
       {
         Qx_[i] = Qx_[i]/NTest_[i];
         Qy_[i] = Qy_[i]/NTest_[i];
+        v_[i] = sqrt(Qx_[i]*Qx_[i]+Qy_[i]*Qy_[i]);
+        psi_[i] = atan2(Qy_[i], Qx_[i]) / order;
       }
     }
 
     for (int i = 0; i < nBins; i++)
     {
-      rnNom[i] += (Qx_[i]*QxRef+Qy_[i]*QyRef);
-      rnDenom[i] += (Qx[i]*QxRef+Qy[i]*QyRef);
-      rnNom_[i] += (Qx[i]*QxRef_+Qy[i]*QyRef_);
-      rnDenom_[i] += (Qx_[i]*QxRef_+Qy_[i]*QyRef_);
-      rnNomSD[i] += (Qx_[i]*QxRef+Qy_[i]*QyRef)*(Qx_[i]*QxRef+Qy_[i]*QyRef);
-      rnDenomSD[i] += (Qx[i]*QxRef+Qy[i]*QyRef)*(Qx[i]*QxRef+Qy[i]*QyRef);
-      rnNomSD_[i] += (Qx[i]*QxRef_+Qy[i]*QyRef_)*(Qx[i]*QxRef_+Qy[i]*QyRef_);
-      rnDenomSD_[i] += (Qx_[i]*QxRef_+Qy_[i]*QyRef_)*(Qx_[i]*QxRef_+Qy_[i]*QyRef_);
+      switch(option)
+      {
+        case "v":
+          rnNom[i] += (v_[i]*vRef);
+          rnDenom[i] += (v[i]*vRef);
+          rnNom_[i] += (v[i]*vRef_);
+          rnDenom_[i] += (v_[i]*vRef_);
+          rnNomSD[i] += (v_[i]*vRef)*(v_[i]*vRef);
+          rnDenomSD[i] += (v[i]*vRef)*(v[i]*vRef);
+          rnNomSD_[i] += (v[i]*vRef_)*(v[i]*vRef_);
+          rnDenomSD_[i] += (v_[i]*vRef_)*(v_[i]*vRef_);
+          break;
+        case "psi":
+          rnNom[i] += (cos(order*(psi_[i]-psiRef)));
+          rnDenom[i] += (cos(order*(psi[i]-psiRef)));
+          rnNom_[i] += (cos(order*(psi[i]-psiRef_)));
+          rnDenom_[i] += (cos(order*(psi_[i]-psiRef_)));
+          rnNomSD[i] += (cos(order*(psi_[i]-psiRef)))*(cos(order*(psi_[i]-psiRef)));
+          rnDenomSD[i] += (cos(order*(psi[i]-psiRef)))*(cos(order*(psi[i]-psiRef)));
+          rnNomSD_[i] += (cos(order*(psi[i]-psiRef_)))*(cos(order*(psi[i]-psiRef_)));
+          rnDenomSD_[i] += (cos(order*(psi_[i]-psiRef_)))*(cos(order*(psi_[i]-psiRef_)));
+          break;
+        case "general":
+          rnNom[i] += (Qx_[i]*QxRef+Qy_[i]*QyRef);
+          rnDenom[i] += (Qx[i]*QxRef+Qy[i]*QyRef);
+          rnNom_[i] += (Qx[i]*QxRef_+Qy[i]*QyRef_);
+          rnDenom_[i] += (Qx_[i]*QxRef_+Qy_[i]*QyRef_);
+          rnNomSD[i] += (Qx_[i]*QxRef+Qy_[i]*QyRef)*(Qx_[i]*QxRef+Qy_[i]*QyRef);
+          rnDenomSD[i] += (Qx[i]*QxRef+Qy[i]*QyRef)*(Qx[i]*QxRef+Qy[i]*QyRef);
+          rnNomSD_[i] += (Qx[i]*QxRef_+Qy[i]*QyRef_)*(Qx[i]*QxRef_+Qy[i]*QyRef_);
+          rnDenomSD_[i] += (Qx_[i]*QxRef_+Qy_[i]*QyRef_)*(Qx_[i]*QxRef_+Qy_[i]*QyRef_);
+          break;
+        default:
+          cout << "Wrong option, 'general' will be used" << endl;
+          rnNom[i] += (Qx_[i]*QxRef+Qy_[i]*QyRef);
+          rnDenom[i] += (Qx[i]*QxRef+Qy[i]*QyRef);
+          rnNom_[i] += (Qx[i]*QxRef_+Qy[i]*QyRef_);
+          rnDenom_[i] += (Qx_[i]*QxRef_+Qy_[i]*QyRef_);
+          rnNomSD[i] += (Qx_[i]*QxRef+Qy_[i]*QyRef)*(Qx_[i]*QxRef+Qy_[i]*QyRef);
+          rnDenomSD[i] += (Qx[i]*QxRef+Qy[i]*QyRef)*(Qx[i]*QxRef+Qy[i]*QyRef);
+          rnNomSD_[i] += (Qx[i]*QxRef_+Qy[i]*QyRef_)*(Qx[i]*QxRef_+Qy[i]*QyRef_);
+          rnDenomSD_[i] += (Qx_[i]*QxRef_+Qy_[i]*QyRef_)*(Qx_[i]*QxRef_+Qy_[i]*QyRef_);
+      }
     }
   }
 
@@ -166,7 +210,17 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
 
   // Write results into the text file (append)
   ofstream fout;
-  fout.open("decorrelation.dat", ofstream::app);
+  switch(option)
+  {
+    case "v":
+      fout.open("decorrelation_v.dat", ofstream::app);
+      break;
+    case "psi":
+      fout.open("decorrelation_psi.dat", ofstream::app);
+      break;
+    default:
+      fout.open("decorrelation.dat", ofstream::app);
+  }
   fout << direct << " r_" << order << endl;
   for(int irap=0; irap<nBins; irap++)
   {
