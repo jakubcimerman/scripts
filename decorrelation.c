@@ -5,7 +5,7 @@
 #include <TChain.h>
 #include <TDirectory.h>
 
-void decorrelation(char* direct, double order, int eventStep, double etaRefMin, double etaRefMax, double etaTestMin, double etaTestMax, int Npart_min, int Npart_max, int isSym, char* option)
+void decorrelation(char* direct, double order, int eventStep, double etaRefMin, double etaRefMax, double etaTestMin, double etaTestMax, int Npart_min, int Npart_max, int isSym, int option)
 {
   cout << endl << endl << "Calculating decorrelation..." << endl;
   cout << "Processing events from directory: " << direct << endl;
@@ -146,7 +146,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     {
       switch(option)
       {
-        case "v":
+        case 1:
           rnNom[i] += (v_[i]*vRef);
           rnDenom[i] += (v[i]*vRef);
           rnNom_[i] += (v[i]*vRef_);
@@ -156,7 +156,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
           rnNomSD_[i] += (v[i]*vRef_)*(v[i]*vRef_);
           rnDenomSD_[i] += (v_[i]*vRef_)*(v_[i]*vRef_);
           break;
-        case "psi":
+        case 2:
           rnNom[i] += (cos(order*(psi_[i]-psiRef)));
           rnDenom[i] += (cos(order*(psi[i]-psiRef)));
           rnNom_[i] += (cos(order*(psi[i]-psiRef_)));
@@ -166,7 +166,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
           rnNomSD_[i] += (cos(order*(psi[i]-psiRef_)))*(cos(order*(psi[i]-psiRef_)));
           rnDenomSD_[i] += (cos(order*(psi_[i]-psiRef_)))*(cos(order*(psi_[i]-psiRef_)));
           break;
-        case "general":
+        case 0:
           rnNom[i] += (Qx_[i]*QxRef+Qy_[i]*QyRef);
           rnDenom[i] += (Qx[i]*QxRef+Qy[i]*QyRef);
           rnNom_[i] += (Qx[i]*QxRef_+Qy[i]*QyRef_);
@@ -212,10 +212,10 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
   ofstream fout;
   switch(option)
   {
-    case "v":
+    case 1:
       fout.open("decorrelation_v.dat", ofstream::app);
       break;
-    case "psi":
+    case 2:
       fout.open("decorrelation_psi.dat", ofstream::app);
       break;
     default:
