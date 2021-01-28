@@ -12,14 +12,15 @@ This script reads ten parameters:
 - `Npart_min` - lower limit of your cut on number of participants
 - `Npart_max` - upper limit of your cut on number of participants
 - `isSym` - set 1 for symmetric collision and 0 for asymmetric collision
+- `option` - set 0 for calculating basic r<sub>n</sub>, 1 for calculating r<sub>n</sub><sup>v</sup>, 2 for calculating r<sub>n</sub><sup>ψ</sup>
 
 The script can be run either by
 ```bash
-root 'decorrelation.c("directory",order,eventStep,etaRefMin,etaRefMax,etaTestMin,etaTestMax,Npart_min,Npart_max,isSym)'
+root 'decorrelation.c("directory",order,eventStep,etaRefMin,etaRefMax,etaTestMin,etaTestMax,Npart_min,Npart_max,isSym,option)'
 ```
 or in batch mode
 ```bash
-root -q -b 'decorrelation.c("directory",order,eventStep,etaRefMin,etaRefMax,etaTestMin,etaTestMax,Npart_min,Npart_max,isSym)'
+root -q -b 'decorrelation.c("directory",order,eventStep,etaRefMin,etaRefMax,etaTestMin,etaTestMax,Npart_min,Npart_max,isSym,option)'
 ```
 
 Other parameters can be changed in the beginning of the script and are set to:
