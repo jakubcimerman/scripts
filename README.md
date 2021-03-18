@@ -86,7 +86,7 @@ Output file contains the path to data and four columns:
 
 ## v<sub>n</sub> {2} (p<sub>T</sub>)
 ###### `vn_C_pT.c`
-This script calculate the flow of any order using 2-cumulant method (formulas for 4-cumulant method are there as well, however they seem to have some bug) as a function of transverse momentum. The scri>
+This script calculate the flow of any order using 2-cumulant method (formulas for 4-cumulant method are there as well, however they seem to have some bug) as a function of transverse momentum. The script reads four parameters:
 - `directory` - directory of your root files
 - `Npart_min` - lower limit of your cut on number of participants
 - `Npart_max` - upper limit of your cut on number of participants
