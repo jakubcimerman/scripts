@@ -63,6 +63,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     double Qx_[nBins] = {0.0}, Qy_[nBins] = {0.0};
     double v[nBins], v_[nBins], vRef, vRef_, psi[nBins], psi_[nBins], psiRef, psiRef_;
     int NRef = 0, NRef_ = 0, NTest[nBins] = {0}, NTest_[nBins] = {0};
+    bool validEvent = true; // we count an event only if it contains particles in all pseudorapidity bins
 
     for(int k = 0; k < eventStep; k++)
     {
@@ -81,27 +82,27 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
           {
             if(eta < etaRefMax && eta > etaRefMin)
             {
-              QxRef += cos(order*phi);  
+              QxRef += cos(order*phi);
               QyRef += sin(order*phi);
               NRef++;
             }
             else if (-eta < etaRefMax && -eta > etaRefMin)
             {
-              QxRef_ += cos(order*phi);  
+              QxRef_ += cos(order*phi);
               QyRef_ += sin(order*phi);
               NRef_++;
             }
             else if (eta < etaTestMax && eta > etaTestMin)
             {
               int etaBin = (eta-etaTestMin)/deta;
-              Qx[etaBin] += cos(order*phi);  
+              Qx[etaBin] += cos(order*phi);
               Qy[etaBin] += sin(order*phi);
               NTest[etaBin]++;
             }
             else if (-eta < etaTestMax && -eta > etaTestMin)
             {
               int etaBin = (-eta-etaTestMin)/deta;
-              Qx_[etaBin] += cos(order*phi);  
+              Qx_[etaBin] += cos(order*phi);
               Qy_[etaBin] += sin(order*phi);
               NTest_[etaBin]++;
             }
@@ -111,12 +112,12 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     }
     if (NRef > 0)
     {
-      centrality_events++;
       QxRef = (double)QxRef/NRef;
       QyRef = (double)QyRef/NRef;
       vRef = sqrt(QxRef*QxRef+QyRef*QyRef);
       psiRef = atan2(QyRef, QxRef) / order;
     }
+    else validEvent = false;
     if (NRef_ > 0)
     {
       QxRef_ = (double)QxRef_/NRef_;
@@ -124,6 +125,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
       vRef_ = sqrt(QxRef_*QxRef_+QyRef_*QyRef_);
       psiRef_ = atan2(QyRef_, QxRef_) / order;
     }
+    else validEvent = false;
     for (int i = 0; i < nBins; i++)
     {
       if (NTest[i] > 0)
@@ -133,6 +135,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
         v[i] = sqrt(Qx[i]*Qx[i]+Qy[i]*Qy[i]);
         psi[i] = atan2(Qy[i], Qx[i]) / order;
       }
+      else validEvent = false;
       if (NTest_[i] > 0)
       {
         Qx_[i] = Qx_[i]/NTest_[i];
@@ -140,8 +143,12 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
         v_[i] = sqrt(Qx_[i]*Qx_[i]+Qy_[i]*Qy_[i]);
         psi_[i] = atan2(Qy_[i], Qx_[i]) / order;
       }
+      else validEvent = false;
     }
 
+    if (validEvent)
+    {
+    centrality_events++;
     for (int i = 0; i < nBins; i++)
     {
       switch(option)
@@ -188,6 +195,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
           rnDenomSD_[i] += (Qx_[i]*QxRef_+Qy_[i]*QyRef_)*(Qx_[i]*QxRef_+Qy_[i]*QyRef_);
       }
     }
+    }
   }
 
   cout << "Number of oversampled events in chosen centrality interval: " << centrality_events << endl;
@@ -221,7 +229,7 @@ void decorrelation(char* direct, double order, int eventStep, double etaRefMin, 
     default:
       fout.open("decorrelation.dat", ofstream::app);
   }
-  fout << direct << " r_" << order << endl;
+  fout << direct << " r_" << order << " n=" << eventStep << " etaRef=" << etaRefMin << ":" << etaRefMax << " etaTest=" << etaTestMin << ":" << etaTestMax << endl;
   for(int irap=0; irap<nBins; irap++)
   {
     rapBin[irap] = etaTestMin + (irap+0.5)*deta;
