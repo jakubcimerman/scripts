@@ -84,6 +84,34 @@ Output file contains the path to data and four columns:
 | p<sub>T</sub> | π<sup>+</sup> spectrum | K<sup>+</sup> spectrum | p spectrum |
 |---|---|---|---|
 
+## v<sub>n</sub> {2} (p<sub>T</sub>)
+###### `vn_C_pT.c`
+This script calculate the flow of any order using 2-cumulant method (formulas for 4-cumulant method are there as well, however they seem to have some bug) as a function of transverse momentum. The scri>
+- `directory` - directory of your root files
+- `Npart_min` - lower limit of your cut on number of participants
+- `Npart_max` - upper limit of your cut on number of participants
+- `order` - order of the flow coefficient you want to calculate
+
+The script can be run either by
+```bash
+root 'vn_C_pT.c("directory",Npart_min,Npart_max,order)'
+```
+or in batch mode
+```bash
+root -q -b 'vn_C_pT.c("directory",Npart_min,Npart_max,order)'
+```
+
+Other parameters can be changed in the beginning of the script and are set to:
+- Transverse momentum cut = (0.2; 3.0)
+- Pseudorapidity cut = (-1.0; 1.0)
+- Number of pT bins = 14
+- Eventstep = 50 - number of events merged into one super-event
+
+Output file contains the path to data and 5 columns:
+
+| p<sub>T</sub> | v<sub>n</sub>{2} | error | v<sub>n</sub>{4} | error |
+|---|---|---|---|---|
+
 ## v<sub>n</sub> {EP} (η)
 ###### `vn_EP_pseudorapidity.c`
 This script calculate the flow of any order using Event Plane method as a function of rapidity. The script reads four parameters:
