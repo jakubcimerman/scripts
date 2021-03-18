@@ -58,6 +58,32 @@ Output file contains the path to data and two columns:
 | η | dN/dη |
 |---|---|
 
+## d<sup>2</sup>N/(2πp<sub>T</sub>dp<sub>T</sub>dy) - p<sub>T</sub> spectrum of π<sup>+</sup>, K<sup>+</sup> and protons
+###### `spectrum.c`
+This script reads three parameters:
+- `directory` - directory of your root files
+- `Npart_min` - lower limit of your cut on number of participants
+- `Npart_max` - upper limit of your cut on number of participants
+
+The script can be run either by
+```bash
+root 'spectrum.c("directory",Npart_min,Npart_max)'
+```
+or in batch mode
+```bash
+root -q -b 'spectrum.c("directory",Npart_min,Npart_max)'
+```
+
+Other parameters can be changed in the beginning of the script and are set to:
+- Transverse momentum cut = (0.2; 2.0)
+- Rapidity cut = (-0.1; 0.1)
+- Number of bins = 36
+
+Output file contains the path to data and four columns:
+
+| p<sub>T</sub> | π<sup>+</sup> spectrum | K<sup>+</sup> spectrum | p spectrum |
+|---|---|---|---|
+
 ## v<sub>n</sub> {EP} (η)
 ###### `vn_EP_pseudorapidity.c`
 This script calculate the flow of any order using Event Plane method as a function of rapidity. The script reads four parameters:
