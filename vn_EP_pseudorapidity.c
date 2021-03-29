@@ -97,7 +97,7 @@ void vn_EP_pseudorapidity(char* direct, int Npart_min, int Npart_max, double ord
           double sinn = sin(order*phi);
           double psin = atan2(_Qy,_Qx)/order;
           double eta = 0.5*log((pabs+pz[i])/(pabs-pz[i]));
-          int etaBin = (eta-etaMin)/deta;
+          int etaBin = floor((eta-etaMin)/deta);
           if(etaBin>=0 && etaBin<nBins)
           {
             _vn_obs[etaBin] += (cosn*cos(order*psin) + sinn*sin(order*psin));

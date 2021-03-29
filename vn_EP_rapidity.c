@@ -109,7 +109,7 @@ void vn_EP_rapidity(const char* direct, int Npart_min, int Npart_max, double ord
           const double sinn = sin(order*phi);
           const double psin = atan2(_Qy,_Qx)/order;
           double rap = 0.5*log((E[i]+pz[i])/(E[i]-pz[i]));
-          int yBin = (rap-yMin)/dy;
+          int yBin = floor((rap-yMin)/dy);
           if(yBin>=0 && yBin<nBins)
           {
             _vn_obs[yBin] += (cosn*cos(order*psin) + sinn*sin(order*psin));
