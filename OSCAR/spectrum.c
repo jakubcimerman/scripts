@@ -23,12 +23,15 @@ void spectrum(const char* direct, int NoF, int NoE)
   // Maximum number of particles - length of arrays
   //const int NP = 60000;
 
-  double px, py, pz, m, E, id;
+  double px, py, pz, m, E;
   double ele;
+  int id;
   int npart, nevents = 0;
   int npar, maxpar;
 
   double dNpi[nBins]={0.0}, dNK[nBins]={0.0}, dNp[nBins]={0.0};
+  double dNpi_ev[nBins]={0.0}, dNK_ev[nBins]={0.0}, dNp_ev[nBins]={0.0};
+  double dNpi_err[nBins]={0.0}, dNK_err[nBins]={0.0}, dNp_err[nBins]={0.0};
 
   // Loop over files
   for (int ifls = 1; ifls < NoF + 1; ifls++) {
@@ -71,6 +74,12 @@ void spectrum(const char* direct, int NoF, int NoE)
         if (npart > 0)
         {
           nevents++;
+          for (int ibin = 0; ibin < nBins; ibin++)
+          {
+            dNpi_ev[ibin] = 0.0;
+            dNK_ev[ibin] = 0.0;
+            dNp_ev[ibin] = 0.0;
+          }
           // Loop over particles
           for (int i = 0; i < npart; i++)
           {
@@ -89,7 +98,7 @@ void spectrum(const char* direct, int NoF, int NoE)
             px = atof(pars[6]);
             py = atof(pars[7]);
             pz = atof(pars[8]);
-            id = atof(pars[9]);
+            id = atoi(pars[9]);
 
             float pt = sqrt(px*px+py*py);
             //float p = sqrt(px*px+py*py+pz*pz);
@@ -97,13 +106,22 @@ void spectrum(const char* direct, int NoF, int NoE)
             float rap = 0.5*log((E+pz)/(E-pz));
             if (abs(rap) < yCut && pt > ptMin && pt < ptMax) {
               int ptBin = (pt-ptMin)/dpt ;
-              if (id == 211) dNpi[ptBin]++;
-              if (id == 321) dNK[ptBin]++;
-              if (id == 2212) dNp[ptBin]++;
+              if (id == 211) dNpi_ev[ptBin]++;
+              if (id == 321) dNK_ev[ptBin]++;
+              if (id == 2212) dNp_ev[ptBin]++;
             }
 
           }
 
+          for (int ibin = 0; ibin < nBins; ibin++)
+          {
+            dNpi[ibin] += dNpi_ev[ibin];
+            dNK[ibin] += dNK_ev[ibin];
+            dNp[ibin] += dNp_ev[ibin];
+            dNpi_err[ibin] += dNpi_ev[ibin] * dNpi_ev[ibin];
+            dNK_err[ibin] += dNK_ev[ibin] * dNK_ev[ibin];
+            dNp_err[ibin] += dNp_ev[ibin] * dNp_ev[ibin];
+          }
           fgets(line,500,infile);
         }
       }
@@ -119,10 +137,20 @@ void spectrum(const char* direct, int NoF, int NoE)
   fout << direct << endl;
   for (int i = 0; i < nBins; i++)
   {
-    dNpi[i] /= (nevents*2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
-    dNK[i] /= (nevents*2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
-    dNp[i] /= (nevents*2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
-    fout << ptMin + (i+0.5)*dpt  << "\t" << dNpi[i] << "\t" << dNK[i] << "\t" << dNp[i] << endl;
+    dNpi[i] /= nevents;
+    dNK[i] /= nevents;
+    dNp[i] /= nevents;
+    dNpi_err[i] = sqrt(dNpi_err[i] / nevents - dNpi[i] * dNpi[i]) / sqrt(nevents);
+    dNK_err[i] = sqrt(dNK_err[i] / nevents - dNK[i] * dNK[i]) / sqrt(nevents);
+    dNp_err[i] = sqrt(dNp_err[i] / nevents - dNp[i] * dNp[i]) / sqrt(nevents);
+    dNpi[i] /= (2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
+    dNK[i] /= (2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
+    dNp[i] /= (2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
+    dNpi_err[i] /= (2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
+    dNK_err[i] /= (2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
+    dNp_err[i] /= (2*pi*dpt*2*yCut*(ptMin + (i+0.5)*dpt));
+    fout << ptMin + (i+0.5)*dpt  << "\t" << dNpi[i] << "\t" << dNpi_err[i] << "\t"
+         << dNK[i] << "\t" << dNK_err[i] << "\t" << dNp[i] << "\t" << dNp_err[i] << endl;
   }
   fout << endl;
   fout.close();
