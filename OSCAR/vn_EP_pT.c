@@ -2,6 +2,7 @@
 #include <fstream>
 #include <iomanip>
 #include <string>
+#include <vector>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -10,7 +11,7 @@ using namespace std;
 // NoF - number of files
 // NoE - number of events
 
-void vn_EP_pT(const char* direct, int NoF, int NoE){
+void vn_EP_pT(const char* direct, int NoF, int NoE, double order){
 
     cout << "Processing events from directory: " << direct << endl;
 
@@ -19,21 +20,12 @@ void vn_EP_pT(const char* direct, int NoF, int NoE){
     const double ptMinCut = 0.2 ;
     const double ptMaxCut = 3.0 ;
     const int nBins = 14 ;
-    const int eventStep = 1;
     const double dpt = (ptMaxCut-ptMinCut)/nBins ;
 
-    static int iplot=0 ;
-    char hname [255] ;
-    sprintf(hname,"hv2ch_%i",iplot) ;
-
-    TH2D *havcos2ch = new TH2D(hname,hname, nBins, ptMinCut, ptMaxCut, 40, -etaCut, etaCut) ;
-    float *ptBin = new float [100] ;
-    float *v2 = new float [100] ;
-
-    double vn[nBins]={0.0};
+    double vn_obs[nBins]={0.0};
     double sd1[nBins]={0.0}, vnerr[nBins]={0.0};
 
-    int nevents = 0;
+    int nevents[nBins] = {0};
 
     int npar, maxpar;
     Int_t npart, Nparticipants ;
@@ -41,9 +33,8 @@ void vn_EP_pT(const char* direct, int NoF, int NoE){
 
     double Rn = 0.0;
 
-    vector<vector<double>> E, px, py, pz;
-    vector<vector<double>> pabs, pt, eta;
-    vector<vector<int>> ele, id;
+    double E, px, py, pz;
+    int ele, id;
 
 
     // Loop over files
@@ -74,18 +65,15 @@ void vn_EP_pT(const char* direct, int NoF, int NoE){
             fgets(line,500,infile);
 
             // Loop over events in file
-            for (int iev = 0; iev < NoE; iev++){
-
-                vector<double> E_ev, px_ev, py_ev, pz_ev;
-                vector<double> pabs_ev, pt_ev, eta_ev;
-                vector<int> ele_ev, id_ev;
-
+            for (int iev = 0; iev < NoE; iev++)
+            {
                 fgets(line,500,infile);
                 strtokresult = strtok(line, delims);
                 npar = 0;
                 maxpar = 5;
 
-                while( (strtokresult != NULL) && (npar < maxpar) ){
+                while( (strtokresult != NULL) && (npar < maxpar) )
+                {
 
                     pars[npar]= strtokresult;
                     strtokresult = strtok( NULL, delims );
@@ -94,164 +82,160 @@ void vn_EP_pT(const char* direct, int NoF, int NoE){
 
                 int npart = atoi(pars[4]);
 
-                nevents++;
+                if (npart > 0)
+                {
+                    double Qx = 0.0, Qy = 0.0;
+                    vector<double> E_ev, px_ev, py_ev, pz_ev;
+                    vector<int> ele_ev, id_ev;
 
-                // Loop over particles 
-                for (int i = 0; i < npart; i++){
+                    // First loop over particles - calculate flow vector
+                    for (int i = 0; i < npart; i++)
+                    {
+                        fgets(line,500,infile);
+                        strtokresult = strtok(line, delims);
+                        npar = 0;
+                        maxpar = 12;
 
-                    fgets(line,500,infile);
-                    strtokresult = strtok(line, delims);
-                    npar = 0;
-                    maxpar = 12;
+                        while( (strtokresult != NULL) && (npar < maxpar) )
+                        {
 
-                    while( (strtokresult != NULL) && (npar < maxpar) ){
+                            pars[npar]= strtokresult;
+                            strtokresult = strtok( NULL, delims );
+                            npar += 1;
+                        }
 
-                        pars[npar]= strtokresult;
-                        strtokresult = strtok( NULL, delims );
-                        npar += 1;
+                        id = atof(pars[9]);
+                        E = atof(pars[5]);
+                        px = atof(pars[6]);
+                        py = atof(pars[7]);
+                        pz = atof(pars[8]);
+                        ele = atoi(pars[11]);
+
+                        double pabs = sqrt(px*px+py*py+pz*pz);
+                        double pt = sqrt(px*px+py*py);
+                        double eta = 0.5*log((pabs+pz)/(pabs-pz));
+                        double phi = atan2(py,px);
+
+                        if (abs(eta)<etaCut && pt>ptMinCut && pt<ptMaxCut)
+                        {
+                            Qx += pt*cos(order*phi);
+                            Qy += pt*sin(order*phi);
+                        }
+
+                        id_ev.push_back(id);
+                        E_ev.push_back(E);
+                        px_ev.push_back(px);
+                        py_ev.push_back(py);
+                        pz_ev.push_back(pz);
+                        ele_ev.push_back(ele);
                     }
 
-                    int id_ = atof(pars[9]);
-                    double E_ = atof(pars[5]);
-                    double px_ = atof(pars[6]);
-                    double py_ = atof(pars[7]);
-                    double pz_ = atof(pars[8]);
-                    double ele_ = atoi(pars[11]);
+                    double _vn_obs[nBins] = {0.0};
+                    double QxA = 0.0, QxB = 0.0, QyA = 0.0, QyB = 0.0;
+                    int _nvn[nBins] = {0};
 
-                    const float pabs_ = sqrt(px_*px_+py_*py_+pz_*pz_);
-                    const float pt_ = sqrt(px_*px_+py_*py_);
-                    const float eta_ = 0.5*log((pabs_+pz_)/(pabs_-pz_));
+                    // Second loop over particles
+                    for (int i = 0; i < npart; i++)
+                    {
+                        double pabs = sqrt(px_ev[i]*px_ev[i]+py_ev[i]*py_ev[i]+pz_ev[i]*pz_ev[i]);
+                        double pt = sqrt(px_ev[i]*px_ev[i]+py_ev[i]*py_ev[i]);
+                        double eta = 0.5*log((pabs+pz_ev[i])/(pabs-pz_ev[i]));
+                        double phi = atan2(py_ev[i],px_ev[i]);
 
-                    id_ev.push_back(id_);
-                    pabs_ev.push_back(pabs_);
-                    pt_ev.push_back(pt_);
-                    eta_ev.push_back(eta_);
-                    E_ev.push_back(E_);
-                    px_ev.push_back(px_);
-                    py_ev.push_back(py_);
-                    pz_ev.push_back(pz_);
-                    ele_ev.push_back(ele_);
+                        if (pt>ptMinCut && pt<ptMaxCut && abs(eta)<etaCut && ele_ev[i]!=0)
+                        {
+                            double _Qx = Qx - pt*cos(order*phi);  // corrected flow vector
+                            double _Qy = Qy - pt*sin(order*phi);  // corrected flow vector
+                            double cosn = cos(order*phi);
+                            double sinn = sin(order*phi);
+                            double psin = atan2(_Qy,_Qx)/order;
+                            int ptBin = floor((pt-ptMinCut)/dpt);
+                            _vn_obs[ptBin] += (cosn*cos(order*psin) + sinn*sin(order*psin));
+                            _nvn[ptBin]++;
+                        }
 
+                        if (abs(eta)<etaCut && pt>ptMinCut && pt<ptMaxCut)
+                        {
+                            if (i%2 == 0)
+                            {
+                                QxA += pt*cos(order*phi);
+                                QyA += pt*sin(order*phi);
+                            }
+                            else
+                            {
+                                QxB += pt*cos(order*phi);
+                                QyB += pt*sin(order*phi);
+                            }
+                        }
+                    }
+
+                    double psi2A = atan2(QyA,QxA)/order;
+                    double psi2B = atan2(QyB,QxB)/order;
+                    Rn += cos(order*(psi2A-psi2B));
+
+                    for (int i = 0; i < nBins; i++)
+                    {
+                        if (_nvn[i]>0)
+                        {
+                             nevents[i]++;
+                             _vn_obs[i] /= _nvn[i];
+                        }
+                        vn_obs[i] += _vn_obs[i];
+                        sd1[i] += _vn_obs[i] * _vn_obs[i];
+                    }
                 }
-
-                id.push_back(id_ev);
-                pabs.push_back(pabs_ev);
-                pt.push_back(pt_ev);
-                eta.push_back(eta_ev);
-                E.push_back(E_ev);
-                px.push_back(px_ev);
-                py.push_back(py_ev);
-                pz.push_back(pz_ev);
-                ele.push_back(ele_ev);
-
-
                 fgets(line,500,infile);
             }
         }
     }
 
-    for (int k=0; k<px.size(); k++){
+    cout << "Number of events: " << nevents[0] << endl;
 
-        double Qx = 0.0, Qy = 0.0;
+    for (int i=0; i<nBins; i++)
+    {
+        vn_obs[i] /= nevents[i];
+        vnerr[i] = sqrt(sd1[i]/nevents[i] - vn_obs[i]*vn_obs[i]);
+    }
 
-
-        // Loop over particles #1
-        for (int i = 0; i < px[k].size(); i++){
-
-
-            if(fabs(0.5*log((pabs.at(k).at(i)+pz.at(k).at(i))/(pabs.at(k).at(i)-pz.at(k).at(i))))<etaCut && pt.at(k).at(i)>ptMinCut && pt.at(k).at(i)<ptMaxCut){
-
-                Qx += (px.at(k).at(i)*px.at(k).at(i)-py.at(k).at(i)*py.at(k).at(i))/pt.at(k).at(i) ;  // which is pt*cos(2*phi)
-                Qy += 2.*px.at(k).at(i)*py.at(k).at(i)/pt.at(k).at(i) ;       //  which is pt*cos(2*phi)
-
-            }
-        }
-
-        double QxA=0.0, QxB=0.0, QyA=0.0, QyB=0.0 ;
-        int _nv2 = 0 ;
-
-        // Loop over particles #2
-        for (int i = 0; i < px[k].size(); i++){
-
-
-            if(pt.at(k).at(i)>ptMinCut && pt.at(k).at(i)<ptMaxCut && ele.at(k).at(i)!=0 && fabs(eta.at(k).at(i))<etaCut){
-
-                const double _Qx = Qx - (px.at(k).at(i)*px.at(k).at(i)-py.at(k).at(i)*py.at(k).at(i))/pt.at(k).at(i) ;  //corrected flow vector
-                const double _Qy = Qy - 2.*px.at(k).at(i)*py.at(k).at(i)/pt.at(k).at(i) ;       //corrected flow vector
-    	        const double cos2 = (px.at(k).at(i)*px.at(k).at(i)-py.at(k).at(i)*py.at(k).at(i))/(pt.at(k).at(i)*pt.at(k).at(i)) ;
-    	        const double sin2 = 2.*px.at(k).at(i)*py.at(k).at(i)/(pt.at(k).at(i)*pt.at(k).at(i)) ;
-    	        const double psi2 = 0.5*atan2(_Qy,_Qx) ;
-                _nv2++ ;
-
-	            havcos2ch->Fill(sqrt(px.at(k).at(i)*px.at(k).at(i)+py.at(k).at(i)*py.at(k).at(i)), cos2*cos(2.0*psi2) + sin2*sin(2.0*psi2)) ;
-
-            }
-
-	        if(fabs(0.5*log((pabs.at(k).at(i)+pz.at(k).at(i))/(pabs.at(k).at(i)-pz.at(k).at(i))))<etaCut && pt.at(k).at(i)>ptMinCut && pt.at(k).at(i)<ptMaxCut){
-
-                if(i%2==0){ //subevent A
-      		        QxA += (px.at(k).at(i)*px.at(k).at(i)-py.at(k).at(i)*py.at(k).at(i))/pt.at(k).at(i) ;  // which is pt*cos(2*phi)
-      		        QyA += 2.*px.at(k).at(i)*py.at(k).at(i)/pt.at(k).at(i) ;       // which is pt*cos(2*phi)
-    		    }else{ // subevent B
-      		        QxB += (px.at(k).at(i)*px.at(k).at(i)-py.at(k).at(i)*py.at(k).at(i))/pt.at(k).at(i) ;  //which is pt*cos(2*phi)
-      		        QyB += 2.*px.at(k).at(i)*py.at(k).at(i)/pt.at(k).at(i) ;       // which is pt*cos(2*phi)
-    		    }
-  	        } // end if
-
-        }
-
-        if(_nv2==0) continue ;
-  	    const double psi2A = 0.5*atan2(QyA,QxA) ;
-  	    const double psi2B = 0.5*atan2(QyB,QxB) ;
-	
-	    Rn += cos(2.0*(psi2A-psi2B)) ;
-
-    }//event loop
-
-    Rn = sqrt(Rn/nevents) ;
-
+    Rn = sqrt(Rn/nevents[0]) ;
     cout << "Rn^sub = " << Rn << endl;
 
- 	const double pf = sqrt(TMath::Pi())/(2.0*sqrt(2.0)) ;
- 	double ksiMin=0., ksiMax = 20. ;
+    const double pf = sqrt(M_PI)/(2.0*sqrt(2.0)) ;
+    double ksiMin=0., ksiMax = 20. ;
 
- 	while(ksiMax-ksiMin>0.01){
+    while(ksiMax-ksiMin>0.01)
+    {
+        double ksi = 0.5*(ksiMin+ksiMax) ;
+        double R = pf*ksi*exp(-0.25*ksi*ksi)*(TMath::BesselI0(0.25*ksi*ksi)+TMath::BesselI1(0.25*ksi*ksi)) ;
+        if(R>Rn) ksiMax = ksi ;
+        else ksiMin = ksi ;
+    }
 
-   	    double ksi = 0.5*(ksiMin+ksiMax) ;
-   	    double R = pf*ksi*exp(-0.25*ksi*ksi)*(TMath::BesselI0(0.25*ksi*ksi)+TMath::BesselI1(0.25*ksi*ksi)) ;
-   	    if(R>Rn) ksiMax = ksi ;
-   	    else ksiMin = ksi ;
- 	}
-
-	const double ksi = sqrt(2)*0.5*(ksiMin+ksiMax) ;
+    const double ksi = sqrt(2)*0.5*(ksiMin+ksiMax) ;
 
     cout << "ksi = " << ksi << endl;
 
- 	Rn = pf*ksi*exp(-0.25*ksi*ksi)*(TMath::BesselI0(0.25*ksi*ksi)+TMath::BesselI1(0.25*ksi*ksi)) ;
+    Rn = pf*ksi*exp(-0.25*ksi*ksi)*(TMath::BesselI0(0.25*ksi*ksi)+TMath::BesselI1(0.25*ksi*ksi));
 
-    // plotting
+    // Write results into the text file (append)
     ofstream fout;
     fout.open("vn_EP_pT.dat", ofstream::app);
-    fout << direct << endl;
+    fout << direct << "\t" << (int)order << endl;
 
-    for(int ipt=1; ipt<havcos2ch->GetNbinsX()+1; ipt++){
+    double vn[nBins] = {0.0};
+    double ptBin[nBins] = {0.0};
 
-        sprintf(hname,"v2pi_pt_avcos%i_%i",iplot,ipt) ;
-        TH1D* hvch = havcos2ch->ProjectionY(hname,ipt,ipt) ;
-        ptBin[ipt]= havcos2ch->GetXaxis()->GetBinCenter(ipt) ;
-        v2[ipt] = hvch->GetMean()/Rn ;
-        cout << setw(14) << ptBin[ipt] << setw(14) << v2[ipt] << endl ;
-        fout << ptBin[ipt] << "\t" << v2[ipt] << endl ;
-        delete hvch ;
+    for (int ipt=0; ipt<nBins; ipt++)
+    {
+        vn[ipt] = vn_obs[ipt] / Rn;
+        vnerr[ipt] = vnerr[ipt] / Rn / sqrt(nevents[ipt]);
+        ptBin[ipt] = ptMinCut + (ipt + 0.5) * dpt;
+        cout << ptBin[ipt] << "\t" << vn[ipt] << "\t" << vnerr[ipt] << endl;
+        fout << ptBin[ipt] << "\t" << vn[ipt] << "\t" << vnerr[ipt] << endl;
     }
 
     fout << endl;
     fout.close();
 
+    cout << "Results have been written to 'vn_EP_pT.dat'" << endl;
 }
-
-/*int main(){
-
-    vn_EP_pT("/Users/jakub/Desktop/", 100, 100);
-
-}*/
